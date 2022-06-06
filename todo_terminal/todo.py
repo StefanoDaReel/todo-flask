@@ -1,6 +1,6 @@
 import requests
-from requests.exceptions import ConnectionError
 
+from .handlers import request_exc_handler
 from .menu import MenuEnum
 
 
@@ -25,21 +25,23 @@ class ToDo:
 
         self.is_running = True
 
+        self.timeout = 30
+
         self.notes = None
 
-        self.__update_notes()
+        request_exc_handler(self.__update_notes)
 
     def run(self):
+        if not self.notes:
+            return
+
         while self.is_running:
             self.__print_menu()
 
             choice = self.__get_task()
             task = self.tasks.get(choice, self.__unavailable)
 
-            try:
-                task()
-            except ConnectionError:
-                print('Nie można połączyć się z bazą danych.')
+            request_exc_handler(task)
 
     def __print_menu(self):
         print("".join((23*"-", "MENU", 23*"-")))
@@ -63,7 +65,7 @@ class ToDo:
             print(output)
 
     def __update_notes(self):
-        r = requests.get('http://127.0.0.1:5000/todo-api/notes')
+        r = requests.get('http://127.0.0.1:5000/todo-api/notes', timeout=self.timeout)
         self.notes = r.json()
 
     def __add_note(self):
@@ -75,7 +77,7 @@ class ToDo:
             'content': content,
         }
 
-        requests.post('http://127.0.0.1:5000/todo-api/notes', json=data)
+        requests.post('http://127.0.0.1:5000/todo-api/notes', json=data, timeout=self.timeout)
 
         self.__update_notes()
 
@@ -89,7 +91,7 @@ class ToDo:
         if not to_delete:
             return
 
-        requests.delete(f'http://127.0.0.1:5000/todo-api/notes/{to_delete}')
+        requests.delete(f'http://127.0.0.1:5000/todo-api/notes/{to_delete}', timeout=self.timeout)
 
         self.__update_notes()
 
@@ -111,7 +113,7 @@ class ToDo:
             'content': content,
         }
 
-        requests.put(f'http://127.0.0.1:5000/todo-api/notes/{to_update}', json=data)
+        requests.put(f'http://127.0.0.1:5000/todo-api/notes/{to_update}', json=data, timeout=self.timeout)
 
         self.__update_notes()
 

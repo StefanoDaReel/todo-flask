@@ -10,8 +10,11 @@ class Notes(db.Model):
         return self.title
 
     def update(self, **data):
-        self.title = data.get('title', self.title)
-        self.content = data.get('content', self.content)
+        title = data.get('title', self.title)
+        content = data.get('content', self.content)
+
+        self.title = title if title != "" else self.title
+        self.content = content if content != "" else self.content
 
 
 class NotesSchema(ma.SQLAlchemyAutoSchema):

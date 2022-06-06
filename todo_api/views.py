@@ -16,8 +16,8 @@ class NotesList(MethodView):
     def post(self):
         body = request.json
 
-        title = body.get('title')
-        content = body.get('content')
+        title = body.get('title').strip()
+        content = body.get('content').strip()
 
         if title and content:
             note = Notes(
@@ -51,10 +51,10 @@ class NoteDetail(MethodView):
 
         note = Notes.query.get(id)
 
-        title = body.get('title', note.title)
-        content = body.get('content', note.content)
+        title = body.get('title', note.title).strip()
+        content = body.get('content', note.content).strip()
 
-        if title and content:
+        if title or content:
             error = update_obj(db, note, title=title, content=content)
 
             if not error:
